@@ -33,6 +33,18 @@ On Windows GPUs (any vendor), run `pip uninstall onnxruntime; pip install onnxru
 
 > **Herbie on Windows.** `cfgrib` needs ecCodes. If `pip install -e .[hrrr]` builds but decoding fails, install ecCodes via conda (`conda install -c conda-forge eccodes`) or run the Docker image. Without it, the portal falls back to local or synthetic data automatically and says so in the run panel.
 
+## Fact sheet and versions
+
+[FACT_SHEET.md](FACT_SHEET.md) is the user-facing description of the tool: what it does, methods, data, limits and version history. It is linked from the portal header (`factsheet.html`) and printable to PDF.
+
+For every patch or release, run:
+
+```powershell
+python scripts\update_factsheet.py --bump patch -m "Short description of the change"   # or minor / major
+```
+
+This bumps the version, regenerates the AUTO blocks (version, model card, AOIs) and appends to Version history. Edit the prose sections by hand when behavior changes. CI runs `--check` and fails if the fact sheet is stale.
+
 ## Local by default, cloud when needed
 
 Everything is controlled by environment variables or `.env`; see [.env.example](.env.example).
@@ -44,12 +56,14 @@ Everything is controlled by environment variables or `.env`; see [.env.example](
 | UI hosting | Served by the API at `/` | GitHub Pages (`pages.yml`), pointing at `vars.PPFE_API_BASE` |
 | Container | `docker compose up` | `ghcr.io/<owner>/a9_ppfe` built by `docker.yml` |
 
-### GitHub hosting
+### GitHub Pages (`.github/workflows/pages.yml`)
 
-GitHub Pages hosts only the static UI; GitHub Actions cannot serve the API. The UI therefore needs a backend it can reach. There are two options:
+- **Static demo (default).** With no repo variable set, the workflow precomputes the runs in [demo/demo_runs.json](demo/demo_runs.json) on the runner (live HRRR/OSM/DEM, with labelled fallbacks) and publishes them with the UI.
+  - Works in the demo: map, layers, point queries, flow tracing, annotations, GeoJSON export and the fact sheet.
+  - Needs the backend: new runs, road routing, accounts and PDF.
+- **Live mode.** Set the repo variable `PPFE_API_BASE` to an HTTPS backend (the Docker image on a VM or lab server) and add the Pages origin to `PPFE_CORS_ORIGINS`. Every feature is then enabled.
 
-1. **Each user runs their own backend.** Leave `PPFE_API_BASE` unset; it defaults to `http://127.0.0.1:8000`. Users run `ppfe serve` and open the Pages URL. CORS and Chrome's Private Network Access header are already handled.
-2. **A shared backend.** Run the Docker image on a VM or lab server behind HTTPS and set the repo variable `PPFE_API_BASE=https://…`. Add the Pages origin to `PPFE_CORS_ORIGINS`.
+Enable Pages once under **Settings → Pages → Source: GitHub Actions**.
 
 ## Features → code
 

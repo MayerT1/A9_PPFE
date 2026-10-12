@@ -3,6 +3,8 @@
 
 const API = ((window.PPFE_CONFIG && window.PPFE_CONFIG.API_BASE) || "").replace(/\/$/, "");
 const ABS = API || location.origin;
+const DEMO = !!(window.PPFE_CONFIG && window.PPFE_CONFIG.DEMO && window.PPFE_DEMO);
+const fileUrl = (id, name) => (DEMO ? window.PPFE_DEMO.fileUrl(id, name) : `${ABS}/api/runs/${id}/files/${name}`);
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 const EMPTY = () => ({ type: "FeatureCollection", features: [] });
@@ -41,6 +43,10 @@ const S = {
 
 // ---------------------------------------------------------------------- api
 async function api(path, opts = {}) {
+  if (DEMO) {
+    if (opts.json !== undefined) opts = { ...opts, body: JSON.stringify(opts.json) };
+    return window.PPFE_DEMO.api(path, opts);
+  }
   const headers = { ...(opts.headers || {}) };
   if (S.token) headers.Authorization = "Bearer " + S.token;
   if (opts.json !== undefined) { headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(opts.json); }
@@ -100,7 +106,10 @@ map.on("load", () => {
   addGeo("aoi");
   map.addLayer({ id: "aoi-fill", type: "fill", source: "aoi", paint: { "fill-color": "#0b6e99", "fill-opacity": 0.04 } });
 
-  map.addSource("fema", { type: "raster", tiles: [ABS + "/api/tiles/fema/{z}/{x}/{y}.png"], tileSize: 256, minzoom: 8, maxzoom: 16, attribution: "FEMA NFHL" });
+  map.addSource("fema", { type: "raster", tiles: [DEMO
+    // Static demo has no tile proxy: request FEMA's export endpoint directly.
+    ? "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&layers=show:28&f=image"
+    : ABS + "/api/tiles/fema/{z}/{x}/{y}.png"], tileSize: 256, minzoom: 8, maxzoom: 16, attribution: "FEMA NFHL" });
   map.addLayer({ id: "fema", type: "raster", source: "fema", minzoom: 8, layout: { visibility: "none" }, paint: { "raster-opacity": 0.6 } });
 
   addGeo("waterways");
@@ -157,11 +166,13 @@ async function boot() {
   renderAccount();
   try {
     S.config = await api("/api/config");
+    $("#verTag").textContent = "v" + S.config.version;
+    if (DEMO) setupDemo();
     const m = await api("/api/model");
     const rt = m.runtime || {};
     const prov = (rt.providers || [])[0] || rt.mode || "";
     $("#pillBackend").className = "pill ok";
-    $("#pillBackend").textContent = m.backend === "remote" ? "Remote inference" : "Local inference";
+    $("#pillBackend").textContent = DEMO ? "Static demo" : m.backend === "remote" ? "Remote inference" : "Local inference";
     $("#pillBackend").title = m.backend === "remote" ? m.url : "Model runs on this server";
     $("#pillModel").textContent = m.backend === "remote" ? ((m.card || {}).name || "remote model") :
       `${m.card.name} · ${prov.replace("ExecutionProvider", "")}`;
@@ -180,6 +191,39 @@ async function boot() {
   // restore last browser session (AOI, run, annotations, view)
   const st = store.get("lastState");
   if (st && st.aoi) restoreState(st).catch((e) => console.warn("restore failed", e));
+}
+
+// ------------------------------------------------------------------- demo
+function demoRunsFor(aoiId) { return ((S.config && S.config.runs) || []).filter((r) => r.aoi_id === aoiId); }
+
+function setupDemo() {
+  document.body.classList.add("demo");
+  const b = $("#demoBanner");
+  b.hidden = false;
+  b.innerHTML = `<b>Static demo</b> · precomputed runs (generated ${esc((S.config.generated || "").slice(0, 10))}). Map, layers, point query, flow tracing and annotations work here; new HRRR runs, road routing, accounts and PDF reports need the live backend. <a href="factsheet.html" target="_blank" rel="noopener">How to run it →</a>`;
+  $("#btnAccount").style.display = "none";
+  $("#source").previousElementSibling.style.display = "none";
+  $("#source").style.display = "none";
+  $("#btnRun").textContent = "Load demo run";
+  $("#btnRoute").textContent = "Road routing (live backend only)";
+  $("#btnReport").textContent = "PDF report (live backend only)";
+  const box = document.createElement("div");
+  box.id = "demoRuns";
+  $("#btnRun").before(box);
+}
+
+function renderDemoRuns() {
+  const box = $("#demoRuns");
+  if (!box) return;
+  const runs = S.aoi ? demoRunsFor(S.aoi.id) : [];
+  box.innerHTML = runs.length ? `<label class="f">Demo runs</label><div class="list">${runs.map((r, i) => `
+    <button class="btn sm" style="justify-content:flex-start;text-align:left" data-dr="${i}">${esc(r.date)} ${String(r.cycle).padStart(2, "0")}z +${r.fxx}h · ${esc(r.label || "")}${r.source === "synthetic" ? " (synthetic)" : ""}</button>`).join("")}</div>`
+    : (S.aoi ? '<div class="note warn">No precomputed run for this AOI in the demo.</div>' : "");
+  box.querySelectorAll("[data-dr]").forEach((btn) => btn.addEventListener("click", () => {
+    const r = runs[+btn.dataset.dr];
+    $("#date").value = r.date; $("#cycle").value = r.cycle; $("#fxx").value = r.fxx; startRun();
+  }));
+  if (runs.length) { $("#date").value = runs[0].date; $("#cycle").value = runs[0].cycle; $("#fxx").value = runs[0].fxx; }
 }
 
 function initForm() {
@@ -222,6 +266,7 @@ function setAoi(id, fly) {
     if (fly) { const b = S.aoi.bbox; map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 40, duration: 900 }); }
     refreshContext();
   }
+  if (DEMO) renderDemoRuns();
 }
 
 // --------------------------------------------------------------------- run
@@ -273,7 +318,7 @@ async function showRun(meta) {
   for (const [k, L] of Object.entries(meta.layers)) {
     if (S.predVisible[k] === undefined) S.predVisible[k] = !!DEFAULT_ON[k];
     if (S.predOpacity[k] === undefined) S.predOpacity[k] = 0.8;
-    map.addSource("pred-" + k, { type: "image", url: `${ABS}/api/runs/${meta.id}/files/${L.png}`, coordinates: L.corners });
+    map.addSource("pred-" + k, { type: "image", url: fileUrl(meta.id, L.png), coordinates: L.corners });
     map.addLayer({ id: "pred-" + k, type: "raster", source: "pred-" + k,
       layout: { visibility: S.predVisible[k] ? "visible" : "none" },
       paint: { "raster-opacity": S.predOpacity[k], "raster-fade-duration": 0, "raster-resampling": "linear" } }, "fema");
@@ -301,6 +346,7 @@ function renderRunResult() {
   const fb = m.hrrr.fallback_errors && Object.keys(m.hrrr.fallback_errors).length
     ? `<div class="note warn">HRRR source fallback: ${esc(Object.entries(m.hrrr.fallback_errors).map(([k, v]) => k + ": " + v).join("; "))}</div>` : "";
   $("#runResult").innerHTML = `
+    ${m.demo_label ? `<div class="note">Demo run: ${esc(m.demo_label)}</div>` : ""}
     ${m.hrrr.source === "synthetic" ? '<div class="note warn">Using <b>synthetic</b> HRRR fields (offline/test).</div>' : ""}${fb}
     <h3>Run ${esc(m.id)}</h3>
     <table class="kv">
@@ -318,7 +364,7 @@ function renderRunResult() {
     <h3>Hazard class, % of AOI</h3>
     <table class="kv">${Object.entries(hz).map(([k, v]) => `<tr><td>${k}</td><td>${v}%</td></tr>`).join("")}</table>
     <p class="hint">Context: DEM ${esc(m.context_sources.dem)} · FEMA ${esc(m.context_sources.fema)}</p>
-    <p class="hint"><a href="${ABS}/api/runs/${m.id}/files/meta.json" target="_blank" rel="noopener">Run metadata (JSON)</a> · Click the map to query values.</p>`;
+    <p class="hint"><a href="${fileUrl(m.id, "meta.json")}" target="_blank" rel="noopener">Run metadata (JSON)</a> · Click the map to query values.</p>`;
 }
 
 function renderPredLayers() {
@@ -456,6 +502,7 @@ async function queryPoint(e) {
 // ---------------------------------------------------------------- routing
 $("#thr").addEventListener("input", () => ($("#thrVal").textContent = (+$("#thr").value).toFixed(2)));
 $("#btnRoute").addEventListener("click", () => {
+  if (DEMO) { $("#routeResult").innerHTML = '<div class="note warn">Road routing needs the live backend (OSM road graph). Run the portal locally with <code>ppfe serve</code>; see the <a href="factsheet.html" target="_blank" rel="noopener">fact sheet</a>.</div>'; return; }
   if (!S.run) return toast("Run the model first", true);
   S.routePts = []; drawPts(); setMode({ kind: "route" }, "Click the start point");
 });
@@ -676,6 +723,10 @@ async function restoreState(st) {
 
 function renderWorkspace() {
   const box = $("#wsBox");
+  if (DEMO) {
+    box.innerHTML = '<p class="hint">In the demo, annotations stay in this browser. Use Export GeoJSON to keep them. Saved accounts and workspaces need the live backend.</p>';
+    return;
+  }
   if (!S.user) {
     box.innerHTML = `<p class="hint">Annotations are kept in this browser. Log in to save workspaces to your account and reopen them anywhere.</p>
       <button class="btn" id="wsLogin">Log in / create account</button>`;

@@ -12,6 +12,8 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Image, KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from . import __version__
+
 INK = colors.HexColor("#1b2a3a")
 ACCENT = colors.HexColor("#0b6e99")
 MUTED = colors.HexColor("#5b6b7a")
@@ -158,7 +160,7 @@ def build_pdf(*, title: str, author: str, notes: str, meta: dict | None, map_png
         c.saveState()
         c.setFont("Helvetica", 7)
         c.setFillColor(MUTED)
-        c.drawString(0.6 * inch, 0.35 * inch, "A9_PPFE · NASA EarthRISE · UAH")
+        c.drawString(0.6 * inch, 0.35 * inch, f"A9_PPFE v{__version__} · NASA EarthRISE · UAH · see FACT_SHEET.md")
         c.drawRightString(letter[0] - 0.6 * inch, 0.35 * inch, f"Page {d.page}")
         c.restoreState()
 

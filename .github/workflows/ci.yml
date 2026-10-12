@@ -12,6 +12,8 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check src tests scripts plugins
       - run: pytest -m "not integration"
+      - name: Fact sheet is current (bump with scripts/update_factsheet.py)
+        run: python scripts/update_factsheet.py --check
       - name: Frontend syntax check
         run: node --check frontend/app.js
       - name: Smoke-boot the portal (offline)

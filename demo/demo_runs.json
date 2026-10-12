@@ -1,0 +1,11 @@
+{
+  "_comment": "Runs precomputed by .github/workflows/pages.yml for the static GitHub Pages demo. Edit freely; each run adds ~0.5-3 MB to the site.",
+  "runs": [
+    {"aoi_id": "nj_passaic", "date": "2021-09-01", "cycle": 18, "fxx": 6, "label": "Remnants of Ida, NJ flash flooding (valid 00Z 2 Sep 2021)"},
+    {"aoi_id": "nj_raritan", "date": "2021-09-01", "cycle": 18, "fxx": 6, "label": "Remnants of Ida, NJ flash flooding (valid 00Z 2 Sep 2021)"},
+    {"aoi_id": "nj_state", "date": "2021-09-01", "cycle": 18, "fxx": 6, "label": "Remnants of Ida, statewide view"},
+    {"aoi_id": "ia_des_moines", "date": "2018-06-30", "cycle": 21, "fxx": 3, "label": "Des Moines flash flood (valid 00Z 1 Jul 2018)"},
+    {"aoi_id": "ia_state", "date": "2018-06-30", "cycle": 21, "fxx": 3, "label": "Iowa statewide, 30 Jun 2018 storms"},
+    {"aoi_id": "ia_cedar_rapids", "date": "2018-06-30", "cycle": 21, "fxx": 3, "label": "Cedar Rapids, 30 Jun 2018 storms"}
+  ]
+}

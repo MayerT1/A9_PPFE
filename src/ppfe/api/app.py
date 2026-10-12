@@ -409,5 +409,16 @@ async def _err(request: Request, exc: Exception):
 
 
 # ================================================================ frontend
+@app.get("/FACT_SHEET.md")
+def fact_sheet():
+    """Versioned fact sheet (repo root), rendered by frontend/factsheet.html."""
+    from ..config import REPO_ROOT
+
+    p = REPO_ROOT / "FACT_SHEET.md"
+    if not p.exists():
+        raise HTTPException(404)
+    return FileResponse(p, media_type="text/markdown; charset=utf-8", headers={"Cache-Control": "no-cache"})
+
+
 if S.role == "app" and S.frontend_dir.exists():
     app.mount("/", StaticFiles(directory=S.frontend_dir, html=True), name="frontend")

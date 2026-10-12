@@ -16,9 +16,11 @@
   <span class="spacer"></span>
   <span id="pillBackend" class="pill">connecting…</span>
   <span id="pillModel" class="pill" title="Hosted model"></span>
+  <a id="lnkFact" class="ghost" href="factsheet.html" target="_blank" rel="noopener" title="What this tool does, methods, data, limits, version history">Fact sheet <span id="verTag"></span></a>
   <button id="btnAccount" class="ghost">Log in</button>
 </header>
 
+<div id="demoBanner" class="demo-banner" hidden></div>
 <main>
   <aside>
     <nav class="tabs" id="tabs">
@@ -136,6 +138,7 @@
         <label class="f" for="repNotes">Summary notes</label><textarea id="repNotes" rows="5" placeholder="Key findings, actions, who to notify…"></textarea>
         <p class="hint">The report includes the current map view (layers, routes, numbered annotations), prediction summary, exposed infrastructure, routing results and the annotation table.</p>
         <button class="btn primary block" id="btnReport">Generate PDF</button>
+        <p class="hint" style="margin-top:14px">Methods, data sources, limits and version history: <a href="factsheet.html" target="_blank" rel="noopener">fact sheet</a>.</p>
       </section>
     </div>
   </aside>
@@ -162,6 +165,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="demo.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

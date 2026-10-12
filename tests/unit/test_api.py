@@ -116,3 +116,18 @@ def test_remote_backend_uses_worker(client, monkeypatch):
     x = np.ones((len(eng.model.card.inputs), 10, 10), np.float32)
     y, t = eng.run(x)
     assert y.shape[1:] == (40, 40) and t["remote"] == "http://worker"
+
+
+def test_fact_sheet_served_and_current(client):
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from ppfe import __version__
+
+    r = client.get("/FACT_SHEET.md")
+    assert r.status_code == 200 and f"**Version {__version__}**" in r.text
+    assert client.get("/factsheet.html").status_code == 200
+    root = Path(__file__).resolve().parents[2]
+    out = subprocess.run([sys.executable, str(root / "scripts" / "update_factsheet.py"), "--check"], capture_output=True, text=True)
+    assert out.returncode == 0, out.stdout + out.stderr

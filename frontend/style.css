@@ -41,6 +41,12 @@ header.bar {
 .pill.ok::before { background: #5cd17a; }
 .pill.warn::before { background: #ffb547; }
 .bar button.ghost { background: transparent; border: 1px solid rgba(255,255,255,.3); color: var(--bar-ink); border-radius: var(--radius); padding: 5px 10px; cursor: pointer; }
+.bar a.ghost { color: var(--bar-ink); text-decoration: none; border: 1px solid rgba(255,255,255,.3); border-radius: var(--radius); padding: 5px 10px; white-space: nowrap; }
+.bar a.ghost:hover { background: rgba(255,255,255,.08); }
+#verTag { opacity: .65; font-size: 11px; }
+.demo-banner { position: absolute; top: 48px; left: 0; right: 0; z-index: 5; background: #fff4e0; color: #6b4a00; border-bottom: 1px solid #f0d9a8; padding: 6px 14px; font-size: 12.5px; }
+.demo-banner a { color: inherit; font-weight: 600; }
+body.demo main { top: 78px; }
 .bar button.ghost:hover { background: rgba(255,255,255,.08); }
 
 /* ---------- layout ---------- */

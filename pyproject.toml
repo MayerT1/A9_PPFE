@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ppfe"
-version = "0.1.0"
+version = "0.2.0"
 description = "A9_PPFE: host a geospatial foundation model for fast HRRR downscaling + flood decision support"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,7 +26,7 @@ dependencies = [
 hrrr = ["herbie-data>=2024.3", "xarray>=2024.1", "cfgrib>=0.9.10", "netCDF4"]
 export = ["torch>=2.2", "onnx>=1.15"]          # only to (re)export the placeholder / your model to ONNX
 geo = ["rasterio>=1.3"]                         # GeoTIFF/COG outputs alongside PNG overlays
-dev = ["pytest>=8", "ruff>=0.4"]
+dev = ["pytest>=8", "ruff>=0.16,<0.17"]
 
 [project.scripts]
 ppfe = "ppfe.cli:main"

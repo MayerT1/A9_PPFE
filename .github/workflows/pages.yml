@@ -1,13 +1,16 @@
-# Publishes the static portal UI (frontend/) to GitHub Pages.
-# The UI talks to a backend at repo variable PPFE_API_BASE, e.g.
-#   https://ppfe.example.edu        (cloud / lab server)
-#   http://127.0.0.1:8000           (each user's own local backend: `ppfe serve`)
-# Set it in Settings -> Secrets and variables -> Actions -> Variables.
-name: Deploy UI to GitHub Pages
+# Publishes the portal to GitHub Pages.
+#
+# Default (no repo variable set): STATIC DEMO. Precomputed runs listed in
+#   demo/demo_runs.json are built on the runner (live HRRR from AWS, OSM, DEM;
+#   automatic labelled fallbacks if a source is down) and served with the UI.
+# Live mode: set repo variable PPFE_API_BASE (Settings -> Secrets and variables
+#   -> Actions -> Variables) to a reachable backend, e.g. https://ppfe.example.edu.
+#   The UI then talks to that server and every feature is enabled.
+name: Deploy portal to GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ["frontend/**", ".github/workflows/pages.yml"]
+    paths: ["frontend/**", "FACT_SHEET.md", "demo/**", "src/**", "aois/**", "models/**", "scripts/build_demo.py", ".github/workflows/pages.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,19 +18,44 @@ permissions:
   id-token: write
 concurrency: { group: pages, cancel-in-progress: true }
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
+    timeout-minutes: 45
+    env:
+      API_BASE: ${{ vars.PPFE_API_BASE }}
     steps:
       - uses: actions/checkout@v4
-      - name: Point UI at backend
-        env: { API_BASE: "${{ vars.PPFE_API_BASE }}" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - name: Install (with HRRR/GRIB support)
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends libeccodes0
+          pip install -e ".[hrrr]"
+      - name: Fact sheet is current
+        run: python scripts/update_factsheet.py --check
+      - name: Assemble site
         run: |
           cp -r frontend site
-          printf 'window.PPFE_CONFIG = { API_BASE: "%s" };\n' "${API_BASE:-http://127.0.0.1:8000}" > site/config.js
+          cp FACT_SHEET.md site/
           touch site/.nojekyll
+      - name: Build static demo (precomputed runs)
+        if: env.API_BASE == ''
+        run: python scripts/build_demo.py --out site/demo
+      - name: Write runtime config
+        run: |
+          if [ -n "$API_BASE" ]; then
+            printf 'window.PPFE_CONFIG = { API_BASE: "%s", DEMO: false };\n' "$API_BASE" > site/config.js
+          else
+            printf 'window.PPFE_CONFIG = { API_BASE: "", DEMO: true };\n' > site/config.js
+          fi
+          du -sh site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: site }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
+    steps:
       - id: d
         uses: actions/deploy-pages@v4

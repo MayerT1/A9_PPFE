@@ -1,5 +1,14 @@
 # Status
 
+## 2026-10-12: v0.2.0, fact sheet + Pages demo
+
+- `FACT_SHEET.md` has AUTO blocks (version, model card, AOIs) and a changelog. `scripts/update_factsheet.py --bump/--check` maintains it, CI enforces it, and the portal header links to it (`factsheet.html`). The PDF footer shows the version.
+- Static Pages demo:
+  - `scripts/build_demo.py` precomputes 6 runs from `demo/demo_runs.json` (Ida 2021 for NJ; 30 Jun 2018 for IA).
+  - `frontend/demo.js` serves them, including in-browser point queries and D8 tracing.
+  - `pages.yml` switches to live mode when `PPFE_API_BASE` is set.
+- Verified offline: 16 tests pass; Playwright confirmed demo load, layers, point query, trace, routing-disabled message and fact sheet rendering. The live HRRR fetch for the demo dates is first exercised by the Pages workflow run.
+
 ## 2026-10-12: platform scaffold (Phase 0 done)
 
 **Built**
