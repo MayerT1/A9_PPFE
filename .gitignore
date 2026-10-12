@@ -1,5 +1,5 @@
 # runtime data (runs, caches, sqlite, secrets, staged HRRR)
-data/
+/data/
 .env
 .geostudio_config_file
 # models: only the small placeholder ONNX is versioned
