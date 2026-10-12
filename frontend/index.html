@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>A9 PPFE Portal</title>
+  <meta name="description" content="Foundation-model downscaling of HRRR with flood decision support for New Jersey and Iowa." />
+  <link rel="stylesheet" href="vendor/maplibre-gl.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="config.js"></script>
+  <script src="vendor/maplibre-gl.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><b>A9 PPFE</b><small>HRRR · Foundation model · Flood decision support</small></div>
+  <span class="spacer"></span>
+  <span id="pillBackend" class="pill">connecting…</span>
+  <span id="pillModel" class="pill" title="Hosted model"></span>
+  <button id="btnAccount" class="ghost">Log in</button>
+</header>
+
+<main>
+  <aside>
+    <nav class="tabs" id="tabs">
+      <button data-tab="run" class="active">Run</button>
+      <button data-tab="layers">Layers</button>
+      <button data-tab="route">Routing</button>
+      <button data-tab="annotate">Annotate</button>
+      <button data-tab="report">Report</button>
+    </nav>
+    <div class="panes">
+
+      <!-- ================= RUN ================= -->
+      <section class="pane active" id="pane-run">
+        <h3>Area of interest</h3>
+        <div class="quick">
+          <button class="btn sm" data-region="New Jersey">New Jersey</button>
+          <button class="btn sm" data-region="Iowa">Iowa</button>
+        </div>
+        <select id="aoiSelect"></select>
+        <p class="hint" id="aoiHint">AOIs are read from the <code>aois/</code> folder; drop in your GeoJSONs to replace these informal areas.</p>
+
+        <h3>HRRR</h3>
+        <div class="row">
+          <div><label class="f" for="date">Date</label><input type="date" id="date" /></div>
+          <div><label class="f" for="cycle">Cycle (UTC)</label><select id="cycle"></select></div>
+          <div><label class="f" for="fxx">Fcst hr</label><select id="fxx"></select></div>
+        </div>
+        <label class="f" for="source">Data source</label>
+        <select id="source">
+          <option value="">Server default</option>
+          <option value="aws">NOAA HRRR on AWS (cloud)</option>
+          <option value="local">Local staged files</option>
+          <option value="synthetic">Synthetic (offline test)</option>
+        </select>
+        <button class="btn primary block" id="btnRun">Fetch HRRR &amp; run model</button>
+        <div class="progress" id="progress"><div class="track"><div class="fill" id="progFill"></div></div><div class="lbl" id="progLbl"></div></div>
+
+        <div id="runResult"></div>
+      </section>
+
+      <!-- ================= LAYERS ================= -->
+      <section class="pane" id="pane-layers">
+        <h3>Prediction</h3>
+        <div id="predLayers"><div class="empty">Run the model to add prediction layers.</div></div>
+
+        <h3>Context</h3>
+        <div class="layer"><label><input type="checkbox" data-ctx="fema" /><span class="sw" style="background:#6fa8dc"></span><span>FEMA flood zones<span class="src">NFHL Special Flood Hazard Areas</span></span></label><input type="range" min="0" max="1" step="0.05" value="0.6" data-op="fema" /></div>
+        <div class="layer"><label><input type="checkbox" data-ctx="waterways" /><span class="sw" style="background:#2f7fd6"></span><span>Rivers &amp; waterways<span class="src">OpenStreetMap</span></span></label></div>
+        <div class="layer"><label><input type="checkbox" data-ctx="infrastructure" /><span class="sw" style="background:#7a3db8"></span><span>Critical infrastructure<span class="src">Hospitals, fire, police, schools, shelters, substations, water</span></span></label></div>
+        <div class="layer"><label><input type="checkbox" data-ctx="roads" /><span class="sw" style="background:#e8a33a"></span><span>Roads<span class="src">OSM, loads for current view (zoom in)</span></span></label></div>
+        <p class="hint" id="ctxNote"></p>
+
+        <h3>Basemap</h3>
+        <div class="seg" id="basemapSeg">
+          <button data-bm="osm" class="on">OSM</button>
+          <button data-bm="topo">USGS Topo</button>
+          <button data-bm="imagery">Imagery</button>
+          <button data-bm="none">None</button>
+        </div>
+      </section>
+
+      <!-- ================= ROUTING ================= -->
+      <section class="pane" id="pane-route">
+        <div id="routeNeedRun" class="note warn">Run the model first; routing uses the predicted hazard.</div>
+        <h3>Response route on roads</h3>
+        <p class="hint">Click a start and an end point. The fastest route ignoring the forecast is compared with a hazard-aware route that slows down on risky roads and closes roads above the threshold.</p>
+        <label class="f">Close roads above hazard <b id="thrVal">0.70</b></label>
+        <input type="range" id="thr" min="0.3" max="1" step="0.05" value="0.7" style="width:100%" />
+        <button class="btn block" id="btnRoute">Pick start &amp; end on map</button>
+        <div id="routeResult"></div>
+
+        <h3>Stormwater flow path</h3>
+        <p class="hint">Click any point to trace where runoff goes downstream (D8 over the DEM, weighted by predicted rain).</p>
+        <button class="btn block" id="btnTrace">Pick a point on map</button>
+        <div id="traceResult"></div>
+
+        <h3>Infrastructure at risk</h3>
+        <div id="exposedList"><div class="empty">Run the model to list exposed facilities.</div></div>
+        <button class="btn sm" id="btnClearRoutes" style="margin-top:10px">Clear routes &amp; traces</button>
+      </section>
+
+      <!-- ================= ANNOTATE ================= -->
+      <section class="pane" id="pane-annotate">
+        <h3>Draw</h3>
+        <div class="seg" id="drawSeg">
+          <button data-draw="Point">Point</button>
+          <button data-draw="LineString">Line</button>
+          <button data-draw="Polygon">Area</button>
+        </div>
+        <p class="hint">Line/area: click to add vertices, double-click or press Finish. Esc cancels.</p>
+        <div id="annForm" style="display:none">
+          <label class="f" for="annTitle">Title</label><input type="text" id="annTitle" maxlength="120" />
+          <label class="f" for="annNote">Note</label><textarea id="annNote"></textarea>
+          <label class="f">Color</label>
+          <div class="seg" id="annColor">
+            <button data-c="#d62f2f" class="on">Red</button><button data-c="#e08a00">Orange</button><button data-c="#1f6fd1">Blue</button><button data-c="#2b8a3e">Green</button><button data-c="#6b2fb3">Purple</button>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="annSave">Save annotation</button><button class="btn" id="annCancel">Cancel</button></div>
+        </div>
+        <h3>Annotations <span id="annCount"></span></h3>
+        <div class="list" id="annList"><div class="empty">No annotations yet.</div></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn sm" id="annExport">Export GeoJSON</button>
+          <label class="btn sm" style="text-align:center">Import<input type="file" id="annImport" accept=".geojson,.json" hidden /></label>
+        </div>
+
+        <h3>Workspace</h3>
+        <div id="wsBox"></div>
+      </section>
+
+      <!-- ================= REPORT ================= -->
+      <section class="pane" id="pane-report">
+        <h3>PDF report</h3>
+        <label class="f" for="repTitle">Title</label><input type="text" id="repTitle" value="Flood situation report" />
+        <label class="f" for="repNotes">Summary notes</label><textarea id="repNotes" rows="5" placeholder="Key findings, actions, who to notify…"></textarea>
+        <p class="hint">The report includes the current map view (layers, routes, numbered annotations), prediction summary, exposed infrastructure, routing results and the annotation table.</p>
+        <button class="btn primary block" id="btnReport">Generate PDF</button>
+      </section>
+    </div>
+  </aside>
+
+  <div id="map">
+    <div class="modebar" id="modebar"><span id="modeText"></span><button id="modeFinish" style="display:none">Finish</button><button id="modeCancel">Cancel</button></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</main>
+
+<div class="modal" id="authModal">
+  <div class="card">
+    <h2 id="authTitle">Log in</h2>
+    <p class="hint">Accounts save workspaces (AOI, run, annotations, routes) to this server.</p>
+    <div id="authNameRow" style="display:none"><label class="f" for="authName">Name</label><input type="text" id="authName" /></div>
+    <label class="f" for="authEmail">Email</label><input type="email" id="authEmail" autocomplete="username" />
+    <label class="f" for="authPw">Password</label><input type="password" id="authPw" autocomplete="current-password" />
+    <div class="err-msg" id="authErr"></div>
+    <div class="foot">
+      <button class="linkish" id="authSwitch">Create an account</button>
+      <div class="row" style="flex:0 0 auto"><button class="btn" id="authCancel">Cancel</button><button class="btn primary" id="authGo">Log in</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+{
+ "type": "FeatureCollection",
+ "name": "iowa",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "ia_state",
+    "name": "Iowa (statewide)",
+    "region": "Iowa",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -96.64,
+       40.37
+      ],
+      [
+       -90.14,
+       40.37
+      ],
+      [
+       -90.14,
+       43.51
+      ],
+      [
+       -96.64,
+       43.51
+      ],
+      [
+       -96.64,
+       40.37
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "ia_cedar_rapids",
+    "name": "Cedar Rapids / Cedar River",
+    "region": "Iowa",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -91.9,
+       41.8
+      ],
+      [
+       -91.4,
+       41.8
+      ],
+      [
+       -91.4,
+       42.2
+      ],
+      [
+       -91.9,
+       42.2
+      ],
+      [
+       -91.9,
+       41.8
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "ia_des_moines",
+    "name": "Des Moines metro",
+    "region": "Iowa",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -93.85,
+       41.45
+      ],
+      [
+       -93.45,
+       41.45
+      ],
+      [
+       -93.45,
+       41.75
+      ],
+      [
+       -93.85,
+       41.75
+      ],
+      [
+       -93.85,
+       41.45
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "ia_iowa_city",
+    "name": "Iowa City / Iowa River",
+    "region": "Iowa",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -91.7,
+       41.55
+      ],
+      [
+       -91.4,
+       41.55
+      ],
+      [
+       -91.4,
+       41.78
+      ],
+      [
+       -91.7,
+       41.78
+      ],
+      [
+       -91.7,
+       41.55
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "ia_davenport",
+    "name": "Quad Cities / Mississippi",
+    "region": "Iowa",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -90.75,
+       41.45
+      ],
+      [
+       -90.35,
+       41.45
+      ],
+      [
+       -90.35,
+       41.65
+      ],
+      [
+       -90.75,
+       41.65
+      ],
+      [
+       -90.75,
+       41.45
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+# Publishes the static portal UI (frontend/) to GitHub Pages.
+# The UI talks to a backend at repo variable PPFE_API_BASE, e.g.
+#   https://ppfe.example.edu        (cloud / lab server)
+#   http://127.0.0.1:8000           (each user's own local backend: `ppfe serve`)
+# Set it in Settings -> Secrets and variables -> Actions -> Variables.
+name: Deploy UI to GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths: ["frontend/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency: { group: pages, cancel-in-progress: true }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Point UI at backend
+        env: { API_BASE: "${{ vars.PPFE_API_BASE }}" }
+        run: |
+          cp -r frontend site
+          printf 'window.PPFE_CONFIG = { API_BASE: "%s" };\n' "${API_BASE:-http://127.0.0.1:8000}" > site/config.js
+          touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+      - id: d
+        uses: actions/deploy-pages@v4

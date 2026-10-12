@@ -1,0 +1,31 @@
+# Local:   docker compose up                       -> http://localhost:8000
+# Offline: PPFE_OFFLINE=1 PPFE_HRRR_SOURCE=synthetic docker compose up
+# GPU worker on this box + portal using it:
+#          docker compose --profile gpu up
+services:
+  portal:
+    build: .
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-local}/a9_ppfe:latest
+    ports: ["8000:8000"]
+    env_file: [{ path: .env, required: false }]
+    environment:
+      PPFE_OFFLINE: ${PPFE_OFFLINE:-0}
+      PPFE_HRRR_SOURCE: ${PPFE_HRRR_SOURCE:-auto}
+      PPFE_INFERENCE_BACKEND: ${PPFE_INFERENCE_BACKEND:-local}
+      PPFE_REMOTE_URL: ${PPFE_REMOTE_URL:-}
+    volumes:
+      - ./data:/data
+      - ./aois:/app/aois:ro
+
+  worker-gpu:
+    profiles: ["gpu"]
+    build: { context: ., dockerfile: Dockerfile.gpu }
+    environment:
+      PPFE_ROLE: worker
+      PPFE_REMOTE_TOKEN: ${PPFE_REMOTE_TOKEN:-}
+    ports: ["8100:8000"]
+    volumes: ["./data:/data", "./models:/app/models"]
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]

@@ -1,0 +1,186 @@
+{
+ "type": "FeatureCollection",
+ "name": "new_jersey",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "nj_state",
+    "name": "New Jersey (statewide)",
+    "region": "New Jersey",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -75.6,
+       38.92
+      ],
+      [
+       -73.88,
+       38.92
+      ],
+      [
+       -73.88,
+       41.36
+      ],
+      [
+       -75.6,
+       41.36
+      ],
+      [
+       -75.6,
+       38.92
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "nj_passaic",
+    "name": "Passaic River basin",
+    "region": "New Jersey",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -74.75,
+       40.65
+      ],
+      [
+       -74.05,
+       40.65
+      ],
+      [
+       -74.05,
+       41.25
+      ],
+      [
+       -74.75,
+       41.25
+      ],
+      [
+       -74.75,
+       40.65
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "nj_raritan",
+    "name": "Raritan River basin",
+    "region": "New Jersey",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -75.05,
+       40.3
+      ],
+      [
+       -74.2,
+       40.3
+      ],
+      [
+       -74.2,
+       40.85
+      ],
+      [
+       -75.05,
+       40.85
+      ],
+      [
+       -75.05,
+       40.3
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "nj_barnegat",
+    "name": "Barnegat Bay / Shore",
+    "region": "New Jersey",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -74.45,
+       39.5
+      ],
+      [
+       -73.95,
+       39.5
+      ],
+      [
+       -73.95,
+       40.15
+      ],
+      [
+       -74.45,
+       40.15
+      ],
+      [
+       -74.45,
+       39.5
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "nj_trenton",
+    "name": "Trenton / Delaware River",
+    "region": "New Jersey",
+    "informal": true
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -74.95,
+       40.12
+      ],
+      [
+       -74.6,
+       40.12
+      ],
+      [
+       -74.6,
+       40.36
+      ],
+      [
+       -74.95,
+       40.36
+      ],
+      [
+       -74.95,
+       40.12
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

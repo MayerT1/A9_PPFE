@@ -1,3 +1,5 @@
+> **Superseded 2026-10-12.** The project pivoted from Geospatial Studio to the lightweight A9_PPFE hosting platform (see CLAUDE.md §1). Kept for reference only.
+
 # STUDIO_SETUP.md — Standing up Geospatial Studio Locally (Windows)
 
 **Read this together with `CLAUDE.md`.** This file is the concrete runbook for Phase 2 (Geospatial Studio integration). It exists because the upstream repos assume macOS/Linux/cluster environments in places — this file adapts that to your Windows machine and to a "no real model, no GPU yet" starting point.

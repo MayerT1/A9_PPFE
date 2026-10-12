@@ -1,0 +1,22 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests scripts plugins
+      - run: pytest -m "not integration"
+      - name: Frontend syntax check
+        run: node --check frontend/app.js
+      - name: Smoke-boot the portal (offline)
+        run: |
+          PPFE_OFFLINE=1 PPFE_HRRR_SOURCE=synthetic ppfe serve --port 8000 &
+          for i in $(seq 1 30); do curl -sf localhost:8000/api/health && break; sleep 1; done
+          curl -sf localhost:8000/ | grep -q "A9 PPFE"
+          ppfe bench --size 256 --repeat 3

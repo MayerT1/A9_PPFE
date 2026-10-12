@@ -1,0 +1,17 @@
+# runtime data (runs, caches, sqlite, secrets, staged HRRR)
+data/
+.env
+.geostudio_config_file
+# models: only the small placeholder ONNX is versioned
+models/*
+!models/placeholder_v2.onnx
+!models/README.md
+# python
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
